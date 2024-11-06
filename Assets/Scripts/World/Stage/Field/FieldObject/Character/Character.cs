@@ -1,27 +1,40 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-public abstract class Character : FieldObject, ITurnStateable
+public abstract class Character : FieldObject
 {
+    public CharacterState CurrentState { get; private set; }
+    Rigidbody rigidbody;
     Animator animator;
-    public abstract TurnState CurrentTurnState { get; set; }
-    public abstract TurnState ExecuteTurn();
-    public TurnState Move(Vector3 nextPos)
+    public bool CanPerformAction(CharacterState desiredAction)
     {
-        float distanceToTarget = Vector3.Distance(Position, nextPos);
-        Position = nextPos;
-        if (distanceToTarget <= 0.1f)
+        return (int)desiredAction <= (int)CurrentState;
+    }
+    public void SetState(CharacterState newState)
+    {
+        if (CanPerformAction(newState))
         {
-            animator.CrossFade("Idle", 0.2f);
-            return TurnState.SUCCESS;
+            CurrentState = newState;
         }
-        if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Walk"))
-            animator.Play("Walk");
+    }
+    public virtual void Idle()
+    {
+        if(CanPerformAction(CharacterState.Idle))
+        {
+           if(!animator.GetCurrentAnimatorStateInfo(0).IsName("Idle"))
+            {
+                animator.CrossFade("Idle", 0.1f);
+            }
+        }
+    }
+    public virtual void Walk()
+    {
 
-        Vector3 direction = (nextPos - transform.position).normalized;
-        transform.rotation = Quaternion.LookRotation(direction);
-        transform.position = Vector3.MoveTowards(transform.position, nextPos, 5f * Time.deltaTime);
-        return TurnState.RUNNING;
+    }
+    public static  bool SetCon(Character character)
+    {
+        return true;
     }
 }
