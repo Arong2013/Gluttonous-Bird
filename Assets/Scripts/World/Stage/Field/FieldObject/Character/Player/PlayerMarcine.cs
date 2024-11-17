@@ -1,8 +1,68 @@
-﻿using System.Collections;
+﻿using UnityEngine;
+using System.Collections;
+using System;
 using System.Collections.Generic;
-using TMPro;
-using UnityEngine;
-public  class PlayerMarcine : Character
+
+public class PlayerMarcine : CharacterMarcine, ISubject
 {
-    bool isGround;
+    PlayerInputHandler inputHandler { get; set; }
+    public WeaponBehavior weaponBehavior { get; private set; }
+    public bool CanComboBtn { get; private set; }  public void EnableComboBtn() => CanComboBtn = true; public void DisableComboBtn() => CanComboBtn = false;
+    List<IObserver> observers = new List<IObserver>();
+
+    public override void Init()
+    {
+
+        var data = CharacterDataManager.GetSingleton();
+        characterData = data.GetCharacterData(1);
+
+
+        inputHandler = FindObjectOfType<PlayerInputHandler>(); inputHandler.Init(this);
+        weaponBehavior = FindObjectOfType<WeaponBehavior>(); weaponBehavior.Initialize(this);
+        PlayerIonsAndBar playerIonsAndBar = FindObjectOfType<PlayerIonsAndBar>(); playerIonsAndBar.Initialize(this);    
+
+        currentBState = new IdleState(this);
+    }
+    private void Update()
+    {
+        if(Mathf.Abs(currentDir.x) > 0.1f || Mathf.Abs(currentDir.y) > 0.1f)
+        {
+            SetAnimatorBool(CharacterAnimeBool.CanMove,true);   
+        }
+        currentBState?.Execute();
+    }
+    public override void Move()
+    {
+        float speed = characterData.GetStat(CharacterStatName.SPD) * currentDir.magnitude;
+        Vector3 moveDirection = new Vector3(currentDir.x, 0, 0).normalized * speed * Time.deltaTime; 
+        rigidbody.MovePosition(transform.position + moveDirection);
+        if (currentDir.x != 0)
+        {
+            transform.rotation = Quaternion.Euler(0, currentDir.x > 0 ? 90 : -90, 0);
+        }
+    }
+    public override void Roll()
+    {
+        float step = 3f * Time.deltaTime;
+        rigidbody.MovePosition(rigidbody.position +transform.forward * step);
+    }
+  
+
+    public void RegisterObserver(IObserver observer)
+    {
+        observers.Add(observer);
+    }
+
+    public void UnregisterObserver(IObserver observer)
+    {
+        observers.Remove(observer);
+    }
+    public void NotifyObservers()
+    {
+        foreach (var observer in observers)
+        {
+            observer.UpdateObserver();
+        }
+    }
+
 }

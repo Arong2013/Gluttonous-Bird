@@ -1,26 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
-public abstract class BehaviorNode
-{
-    protected Character character;
-
-    public BehaviorNode(Character character)
-    {
-        this.character = character;
-    }
-    public abstract BehaviorState Execute();
-}
-
-public class BehaviorSequence : BehaviorNode
+using UnityEngine;
+public class BehaviorSequence 
 {
     private List<BehaviorPhase> actionPhases;
     public Dictionary<string, object> decisionContext = new Dictionary<string, object>();
+    public CharacterMarcine character { get;protected set; }
 
-    public BehaviorSequence(Character character, List<BehaviorPhase> actionPhases) : base(character)
+    public BehaviorSequence(CharacterMarcine character,List<BehaviorPhase> actionPhases) 
     {
         this.actionPhases = actionPhases;
+        this.character = character; 
         foreach (var phase in actionPhases)
         {
             phase.SetParentSequence(this); // 각 BehaviorPhase에 부모 설정
@@ -31,7 +22,7 @@ public class BehaviorSequence : BehaviorNode
         decisionContext[key] = value;
     }
 
-    public override BehaviorState Execute()
+    public BehaviorState Execute()
     {
         foreach (BehaviorPhase phase in actionPhases)
         {
@@ -43,21 +34,24 @@ public class BehaviorSequence : BehaviorNode
     }
 }
 
-public class BehaviorPhase : BehaviorNode
+public class BehaviorPhase
 {
+    public CharacterMarcine character => parentSequence.character;
     private BehaviorSequence parentSequence;
     private List<BehaviorCondition> conditions;
     private BehaviorAction taskAction;
     private BehaviorState currentTurnState;
 
-    public BehaviorPhase(Character character, List<BehaviorCondition> conditions, BehaviorAction taskAction) : base(character)
+    public BehaviorPhase(List<BehaviorCondition> conditions, BehaviorAction taskAction)
     {
         this.conditions = conditions;
         this.taskAction = taskAction;
         this.currentTurnState = BehaviorState.SUCCESS;
-    }
 
-    public override BehaviorState Execute()
+        conditions.ForEach(condition => condition.SetParent(this));
+        taskAction.SetParent(this);
+    }
+    public BehaviorState Execute()
     {
         if (currentTurnState == BehaviorState.RUNNING)
             return currentTurnState = taskAction.Execute();
@@ -67,24 +61,25 @@ public class BehaviorPhase : BehaviorNode
     }
 
     public void SetData(string key, object value) => parentSequence.SetData(key, value);
+
+    public object GetData(string key)
+    {
+        return parentSequence.decisionContext[key];
+    }
     public void SetParentSequence(BehaviorSequence sequence) => parentSequence = sequence;
 }
 
-public abstract class BehaviorCondition : BehaviorNode
+public abstract class BehaviorCondition
 {
+    protected CharacterMarcine character => actionPhase.character;
     protected BehaviorPhase actionPhase;
-    public BehaviorCondition(Character character, BehaviorPhase actionPhase) : base(character)
-    {
-        this.actionPhase = actionPhase;
-    }
-    public abstract override BehaviorState Execute();
+    public abstract BehaviorState Execute();
+    public void SetParent(BehaviorPhase behaviorPhase) { this.actionPhase = behaviorPhase; }    
 }
-public abstract class BehaviorAction : BehaviorNode
+public abstract class BehaviorAction 
 {
+    protected CharacterMarcine character => actionPhase.character;
     protected BehaviorPhase actionPhase;
-    public BehaviorAction(Character character, BehaviorPhase actionPhase) : base(character)
-    {
-        this.actionPhase = actionPhase;
-    }
-    public abstract override BehaviorState Execute();
+    public abstract BehaviorState Execute();
+    public void SetParent(BehaviorPhase behaviorPhase) { this.actionPhase = behaviorPhase; }
 }

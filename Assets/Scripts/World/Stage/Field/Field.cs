@@ -5,5 +5,5 @@ using UnityEngine;
 
 public class Field : MonoBehaviour
 {
-    List<Character> characterList = new List<Character>();
+    List<CharacterMarcine> characterList = new List<CharacterMarcine>();
 }
