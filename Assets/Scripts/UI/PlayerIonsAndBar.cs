@@ -62,8 +62,8 @@ public class PlayerIonsAndBar : MonoBehaviour, IObserver
             currentHp = Mathf.Lerp(currentHp, targetHp, Time.deltaTime * barUpdateSpeed);
             currentSp = Mathf.Lerp(currentSp, targetSp, Time.deltaTime * barUpdateSpeed);
 
-            HpBar.value = currentHp / player.characterData.GetStat(CharacterStatName.HP);
-            SpBar.value = currentSp / player.characterData.GetStat(CharacterStatName.SP);
+            HpBar.value = currentHp / player.characterData.GetStat(CharacterStatName.MaxHP);
+            SpBar.value = currentSp / player.characterData.GetStat(CharacterStatName.MaxSP);
             yield return null;
         }
         updateBarsCoroutine = null;

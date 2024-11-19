@@ -7,18 +7,20 @@ public class ActionChessTarget : BehaviorAction
     {
         if (target == null)
             this.target = actionPhase.GetData("target") as Transform;
-        if (!character.GetAnimatorBool(CharacterAnimeBool.CanMove))
-            character.SetAnimatorBool(CharacterAnimeBool.CanMove, true);
-
         float distanceToTarget = Vector3.Distance(character.transform.position, target.position);
         if (distanceToTarget <= stopDistance)
         {
             character.SetDir(new Vector2(0, 0));
-            character.SetAnimatorBool(CharacterAnimeBool.CanMove, false);   
+            character.SetAnimatorBool(CharacterAnimeBool.CanMove, false);
             return BehaviorState.SUCCESS; // 행동 완료 상태 반환
         }
-        Vector3 direction = (target.position - character.transform.position).normalized;
-        character.SetDir(new Vector2(direction.x,0));
-        return BehaviorState.RUNNING; // 행동 실행 중 상태 반환
+        else
+        {
+            if (!character.GetAnimatorBool(CharacterAnimeBool.CanMove))
+                character.SetAnimatorBool(CharacterAnimeBool.CanMove, true);
+            Vector3 direction = (target.position - character.transform.position).normalized;
+            character.SetDir(new Vector2(direction.x, 0));
+            return BehaviorState.RUNNING; // 행동 실행 중 상태 반환
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 public class MonsterMarcine : CharacterMarcine
@@ -8,12 +9,20 @@ public class MonsterMarcine : CharacterMarcine
     public float HP { get; set; }
     public override void Init()
     {
-        var task = new ActionChessTarget();
-        var con1 = new ConditionCanState(typeof(IdleState));
+        currentBState = new IdleState(this);
+
+
+        var task = new ActionRoar();
+        var task2 = new ActionChessTarget();
+        var task3 = new ActionAttack(2);    
         var con2 = new ConditionForwardTarget(10f);
-        var pase = new BehaviorPhase(new List<BehaviorCondition> { con1,con2} ,task);
-        var seq = new BehaviorSequence(this, new List<BehaviorPhase> { pase });
+       var pase = new BehaviorPhase(new List<BehaviorCondition> { con2} ,task);
+        var pase2 = new BehaviorPhase(new List<BehaviorCondition> { con2 }, task2);
+        var pase3 = new BehaviorPhase(new List<BehaviorCondition> { con2 }, task3);
+        var seq = new BehaviorSequence(this, new List<BehaviorPhase> { pase, pase2, pase3 });
         behaviorSequences.Add(seq);
+
+        monsterParts.ForEach(x => x.Init(this));
     }
 
     public override void Move()

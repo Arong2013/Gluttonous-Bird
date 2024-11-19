@@ -37,6 +37,16 @@ public class CharacterData
         if (!updatedStats.ContainsKey(statName))
         {
             updatedStats[statName] = new Dictionary<object, float>();
+            updatedStats[statName].Add(source, 0);  
+        }
+        updatedStats[statName][source] += value;
+    }
+
+    public void ChangeStat(CharacterStatName statName, object source, float value)
+    {
+        if (!updatedStats.ContainsKey(statName))
+        {
+            updatedStats[statName] = new Dictionary<object, float>();
         }
         updatedStats[statName][source] = value;
     }
@@ -73,12 +83,19 @@ public enum CharacterAnimeBool
     CanAttack,
     CanRoll,
     CanCombo,
-    CanCharging
+    CanCharging,
+    CanRoar,
+    CanHit,
+    CanBigHit,
 }
 public enum CharacterAnimeFloat
 {
     ChargingCount,
     SpeedCount,
+}
+public enum CharacterAnimeIntName
+{
+    AttackType
 }
 public abstract class CharacterMarcine : FieldObject
 {
@@ -94,6 +111,7 @@ public abstract class CharacterMarcine : FieldObject
     public CharacterData characterData { get; protected set; }
     public CharacterState currentBState { get; protected set; }
     public Vector2 currentDir { get; protected set; }
+    public float currentDMG { get; protected set; }
     private void Awake()
     {
         rigidbody = GetComponent<Rigidbody>();
@@ -115,14 +133,20 @@ public abstract class CharacterMarcine : FieldObject
         currentBState.Enter();
     }
     public void SetDir(Vector2 dir) { currentDir = dir; }
+
+    public void SetDMG(float dmg) { currentDMG = dmg;}
     public void SetAnimatorBool(CharacterAnimeBool boolname, bool isCan)
     {
-        print(boolname.ToString());
+
         animator.SetBool(boolname.ToString(), isCan);
     }
     public void SetAnimatorFloat(CharacterAnimeFloat FloatType, float count)
     {
         animator.SetFloat(FloatType.ToString(), count);
+    }
+    public void SetAnimatorInt(CharacterAnimeIntName intName, int count)
+    {
+        animator.SetInteger(intName.ToString(), count);
     }
 
     public bool GetAnimatorBool(CharacterAnimeBool boolname)

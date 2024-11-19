@@ -19,10 +19,6 @@ public class RollState : CharacterState
     public override void Enter()
     {
         base.Enter();
-    }
-    public override void Execute()
-    {
         character.Roll();
-        base.Execute();
     }
 }

@@ -15,6 +15,7 @@ public class ConditionForwardTarget : BehaviorCondition
             actionPhase.SetData("target", hit.transform);
             return BehaviorState.SUCCESS;
         }
+
         return BehaviorState.FAILURE;
     }
 }

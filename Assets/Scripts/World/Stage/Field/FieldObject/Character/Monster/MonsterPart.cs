@@ -7,7 +7,7 @@ public class MonsterPartData
 }
 public class MonsterPart : MonoBehaviour, ICombatable
 {
-    MonsterMarcine monsterMarcine;
+    public MonsterMarcine monsterMarcine { get; private set; }
     MonsterPartData monsterPartData;
     public void Init(MonsterMarcine monsterMarcine)
     {
@@ -15,10 +15,13 @@ public class MonsterPart : MonoBehaviour, ICombatable
         monsterPartData = new MonsterPartData();
         monsterPartData.hp = 100;
     }
-    public void TakeDamage(float dmg)
+    public void TakeDamage(float dmg, CharacterAnimeBool characterAnimeBool)
     {
         dmg = dmg * monsterPartData.disDMG * 0.01f;
         monsterPartData.hp -= dmg;
-        print($"몬스터데미지: {dmg}");
+        Instantiate(ParticleResourceData.Instance.GetParticle("Blood"), transform.position, Quaternion.identity);
+        if (monsterPartData.hp <= 0)
+            monsterMarcine.SetAnimatorBool(CharacterAnimeBool.CanBigHit, true);
+        monsterMarcine.TakeDamge(dmg);
     }
 }

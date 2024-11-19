@@ -6,7 +6,7 @@
 }
 public interface ICombatable
 {
-    void TakeDamage(float dmg);
+    void TakeDamage(float dmg,CharacterAnimeBool characterAnimeBoo = 0l);
 }
 public interface ISubject
 {

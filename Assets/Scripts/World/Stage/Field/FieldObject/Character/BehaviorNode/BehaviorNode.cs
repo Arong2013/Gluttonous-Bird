@@ -21,7 +21,6 @@ public class BehaviorSequence
     {
         decisionContext[key] = value;
     }
-
     public BehaviorState Execute()
     {
         foreach (BehaviorPhase phase in actionPhases)
@@ -33,31 +32,23 @@ public class BehaviorSequence
         return BehaviorState.SUCCESS;
     }
 }
-
 public class BehaviorPhase
 {
     public CharacterMarcine character => parentSequence.character;
     private BehaviorSequence parentSequence;
     private List<BehaviorCondition> conditions;
     private BehaviorAction taskAction;
-    private BehaviorState currentTurnState;
-
     public BehaviorPhase(List<BehaviorCondition> conditions, BehaviorAction taskAction)
     {
         this.conditions = conditions;
         this.taskAction = taskAction;
-        this.currentTurnState = BehaviorState.SUCCESS;
-
         conditions.ForEach(condition => condition.SetParent(this));
         taskAction.SetParent(this);
     }
     public BehaviorState Execute()
     {
-        if (currentTurnState == BehaviorState.RUNNING)
-            return currentTurnState = taskAction.Execute();
-
         bool allConditionsMet = conditions.TrueForAll(c => c.Execute() == BehaviorState.SUCCESS);
-        return currentTurnState = allConditionsMet ? taskAction.Execute() : BehaviorState.FAILURE;
+        return  allConditionsMet ? taskAction.Execute() : BehaviorState.FAILURE;
     }
 
     public void SetData(string key, object value) => parentSequence.SetData(key, value);

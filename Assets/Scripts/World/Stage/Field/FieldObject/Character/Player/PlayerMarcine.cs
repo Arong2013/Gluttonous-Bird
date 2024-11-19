@@ -2,8 +2,9 @@
 using System.Collections;
 using System;
 using System.Collections.Generic;
+using UnityEngine.TextCore.Text;
 
-public class PlayerMarcine : CharacterMarcine, ISubject
+public class PlayerMarcine : CharacterMarcine, ISubject, ICombatable
 {
     PlayerInputHandler inputHandler { get; set; }
     public WeaponBehavior weaponBehavior { get; private set; }
@@ -34,7 +35,7 @@ public class PlayerMarcine : CharacterMarcine, ISubject
     public override void Move()
     {
         float speed = characterData.GetStat(CharacterStatName.SPD) * currentDir.magnitude;
-        Vector3 moveDirection = new Vector3(currentDir.x, 0, 0).normalized * speed * Time.deltaTime; 
+        Vector3 moveDirection = new Vector3(currentDir.x, 0, 0).normalized * speed * Time.deltaTime;  print(speed);
         rigidbody.MovePosition(transform.position + moveDirection);
         if (currentDir.x != 0)
         {
@@ -43,11 +44,12 @@ public class PlayerMarcine : CharacterMarcine, ISubject
     }
     public override void Roll()
     {
-        float step = 3f * Time.deltaTime;
-        rigidbody.MovePosition(rigidbody.position +transform.forward * step);
-    }
-  
+        rigidbody.velocity = Vector3.zero;
+        rigidbody.angularVelocity = Vector3.zero;
 
+        Vector3 backwardForce = transform.forward * 5f;
+        rigidbody.AddForce(backwardForce, ForceMode.Impulse);
+    }
     public void RegisterObserver(IObserver observer)
     {
         observers.Add(observer);
@@ -64,5 +66,19 @@ public class PlayerMarcine : CharacterMarcine, ISubject
             observer.UpdateObserver();
         }
     }
+    public void TakeDamage(float dmg , CharacterAnimeBool characterAnimeBool)
+    {
+        
+        if (characterAnimeBool == CharacterAnimeBool.CanBigHit || characterAnimeBool == CharacterAnimeBool.CanHit)
+        {
+            currentDMG = dmg;   
+            SetAnimatorBool(characterAnimeBool, true);
+            characterData.UpdateStat(CharacterStatName.HP, this, -dmg);
+            NotifyObservers();
+        }
+        else
+        {
 
+        }
+    }
 }
