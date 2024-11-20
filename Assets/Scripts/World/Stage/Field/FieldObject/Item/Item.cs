@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class ItemData
 {
-    public int ID { get; set; }
-
+   public int ID { get; set; }
     public string IconName { get; set; }
     public string Name { get; set; }
     public string Information { get; set; }
@@ -52,5 +52,11 @@ public class RecoveryItemData : ConsumableItemData
 }
 public class Item
 {
-    public ItemData ItemData { get; set; }
+   public Sprite icon { get; set; }
+   public ItemData ItemData { get; set; }
+    public Item(ItemData itemData,Sprite sprite)
+    {
+        ItemData = itemData;
+        icon = sprite;  
+    }
 }

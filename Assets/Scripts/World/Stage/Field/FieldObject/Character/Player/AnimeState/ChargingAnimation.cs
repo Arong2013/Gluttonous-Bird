@@ -18,18 +18,18 @@ public class ChargingState : AttackState
     public override void Enter()
     {
         base.Enter();
-        character.SetAnimatorBool(CharacterAnimeBool.CanCharging, true);
-        character.SetAnimatorFloat(CharacterAnimeFloat.ChargingCount, 0);
+        character.characterAnimatorHandler.SetAnimatorValue(CharacterAnimeBoolName.CanCharging, true);
+        character.characterAnimatorHandler.SetAnimatorValue(CharacterAnimeFloatName.ChargingCount, 0);
         ChargingCount = 0;
     }
     public override void Execute()
     {
         base.Execute();
         ChargingCount += Time.deltaTime;
-        character.SetAnimatorFloat(CharacterAnimeFloat.ChargingCount, ChargingCount);
+        character.characterAnimatorHandler.SetAnimatorValue(CharacterAnimeFloatName.ChargingCount, ChargingCount);
     }
     public override void BtnUp()
     {
-        character.SetAnimatorBool(CharacterAnimeBool.CanCharging, false);
+        character.characterAnimatorHandler.SetAnimatorValue(CharacterAnimeBoolName.CanCharging, false);
     }
 }

@@ -8,11 +8,13 @@ public class PlayerInputHandler : MonoBehaviour
     [SerializeField] Joystick joystick;
     [SerializeField] AttackBtn attackBtn;
     [SerializeField] Button roolBtn;
+    [SerializeField] Button interactionBtn;
     public void Init(PlayerMarcine _playerMarcine)
     {
         playerMarcine = _playerMarcine;
         attackBtn.Init(playerMarcine);
-        roolBtn.onClick.AddListener(() => { playerMarcine.SetAnimatorBool(CharacterAnimeBool.CanRoll,true); });
+        roolBtn.onClick.AddListener(() => { playerMarcine.characterAnimatorHandler.SetAnimatorValue(CharacterAnimeBoolName.CanRoll,true); });
+        interactionBtn.onClick.AddListener(() => playerMarcine.interaction?.Invoke());
     }
     public void Update()
     {

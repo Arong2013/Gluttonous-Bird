@@ -1,27 +1,40 @@
-﻿
-using UnityEngine;
-public class MonsterPartData
+﻿using UnityEngine;
+
+
+public class MonsterPart : MonoBehaviour, ICombatable, IHarvestable
 {
-    public float hp;
-    public float disDMG =100;
-}
-public class MonsterPart : MonoBehaviour, ICombatable
-{
+    [SerializeField] public int BasePartID;
     public MonsterMarcine monsterMarcine { get; private set; }
     MonsterPartData monsterPartData;
-    public void Init(MonsterMarcine monsterMarcine)
+
+    public void Init(MonsterMarcine monsterMarcine,MonsterPartData  monsterPartData)
     {
         this.monsterMarcine = monsterMarcine;
-        monsterPartData = new MonsterPartData();
-        monsterPartData.hp = 100;
+        this.monsterPartData = monsterPartData;
     }
-    public void TakeDamage(float dmg, CharacterAnimeBool characterAnimeBool)
+    public void TakeDamage(float dmg, CharacterAnimeIntName characterAnimeBool,int types)
     {
-        dmg = dmg * monsterPartData.disDMG * 0.01f;
-        monsterPartData.hp -= dmg;
+        dmg = dmg * monsterPartData.DisDMG * 0.01f;
+        monsterPartData.HP -= dmg;
         Instantiate(ParticleResourceData.Instance.GetParticle("Blood"), transform.position, Quaternion.identity);
-        if (monsterPartData.hp <= 0)
-            monsterMarcine.SetAnimatorBool(CharacterAnimeBool.CanBigHit, true);
+        if (monsterPartData.HP <= 0)
+            monsterMarcine.characterAnimatorHandler.SetAnimatorValue(CharacterAnimeIntName.HitType,1);
         monsterMarcine.TakeDamge(dmg);
+    }
+    public bool CanBeHarvested()
+    {
+        return monsterMarcine.IsHarvest;
+    }
+    public void StartHarvest()
+    {
+        
+    }
+    public void EndHarvest()
+    {
+        monsterMarcine.MonsterRealDead();
+    }
+    public int GetHarvestReward()
+    {
+        return Utils.GetRandomItemFromDropTable(monsterPartData.DropItems);
     }
 }

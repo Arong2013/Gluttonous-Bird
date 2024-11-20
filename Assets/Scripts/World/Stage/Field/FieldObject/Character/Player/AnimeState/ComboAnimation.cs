@@ -19,11 +19,11 @@ public class ComboState : AttackState
     public override void Enter()
     {
         base.Enter();
-        character.SetAnimatorBool(CharacterAnimeBool.CanCombo, false);
+        character.characterAnimatorHandler.SetAnimatorValue(CharacterAnimeBoolName.CanCombo, false);
     }
     public override void BtnUp()
     {
         if (character is PlayerMarcine player && player.CanComboBtn)
-            character.SetAnimatorBool(CharacterAnimeBool.CanCombo, true);
+            character.characterAnimatorHandler.SetAnimatorValue(CharacterAnimeBoolName.CanCombo, true);
     }
 }

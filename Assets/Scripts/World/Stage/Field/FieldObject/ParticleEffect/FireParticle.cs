@@ -16,8 +16,7 @@ public class FireParticle : MonoBehaviour
         if (other.TryGetComponent<ICombatable>(out ICombatable target) && !combatables.Contains(target))
         {
             combatables.Add(target);
-            print(damage);
-            target.TakeDamage(damage,CharacterAnimeBool.CanBigHit);
+            target.TakeDamage(damage,CharacterAnimeIntName.HitType,1);
         }
     }
 }

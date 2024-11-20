@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using Mono.Data.Sqlite;
 using UnityEngine;
-
+using System.IO;
 public class CharacterDataManager
 {
     private readonly string dbPath = $"{Application.streamingAssetsPath}/CharacterData.db";

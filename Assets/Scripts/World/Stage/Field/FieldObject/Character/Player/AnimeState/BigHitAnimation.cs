@@ -8,29 +8,35 @@ public class BigHitAnimation : StateMachineBehaviour
     public override void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
         character ??= animator.GetComponent<CharacterMarcine>();
-        character.ChangePlayerState(new BigHitState(character));
+        character.ChangePlayerState(new BigHitState(character, animator));
     }
 }
 public class BigHitState : CharacterState
 {
-    public BigHitState(CharacterMarcine character) : base(character) { }
+    Animator animator;
+    public BigHitState(CharacterMarcine character, Animator animator) : base(character) { this.animator = animator; }
 
     public override void Enter()
     {
         base.Enter();
         var dmg = character.currentDMG;
         character.SetDMG(0);
-        foreach (CharacterAnimeBool boolName in Enum.GetValues(typeof(CharacterAnimeBool)))
+        foreach (AnimatorControllerParameter param in animator.parameters)
         {
-            character.SetAnimatorBool(boolName, false);
-        }
-        foreach (CharacterAnimeFloat floatName in Enum.GetValues(typeof(CharacterAnimeFloat)))
-        {
-            character.SetAnimatorFloat(floatName, 0);
-        }
-        foreach (CharacterAnimeIntName intName in Enum.GetValues(typeof(CharacterAnimeIntName)))
-        {
-            character.SetAnimatorInt(intName, 0);
+            switch (param.type)
+            {
+                case AnimatorControllerParameterType.Bool:
+                    animator.SetBool(param.name, false);
+                    break;
+
+                case AnimatorControllerParameterType.Float:
+                    animator.SetFloat(param.name, 0f);
+                    break;
+
+                case AnimatorControllerParameterType.Int:
+                    animator.SetInteger(param.name, 0);
+                    break;
+            }
         }
         if (character.TryGetComponent<Rigidbody>(out Rigidbody rb))
         {

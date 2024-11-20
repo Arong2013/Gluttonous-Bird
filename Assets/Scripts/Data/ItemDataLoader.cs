@@ -7,7 +7,8 @@ using UnityEngine;
 public class ItemDataLoader
 {
     private readonly string dbPath = $"{Application.streamingAssetsPath}/ItemData.db";
-    private readonly Dictionary<int, ItemData> loadedItems = new Dictionary<int, ItemData>();
+    private readonly Dictionary<int, Item> loadedItems = new Dictionary<int, Item>();
+    private readonly Dictionary<string, Sprite> itemSprites = new Dictionary<string, Sprite>(); // 아이템 이름과 스프라이트 매핑
 
     private static ItemDataLoader instance = null;
 
@@ -28,6 +29,7 @@ public class ItemDataLoader
 
     private ItemDataLoader()
     {
+        LoadAllSprites();
         LoadAllItems();
     }
 
@@ -39,6 +41,26 @@ public class ItemDataLoader
         foreach (ItemTableName tableName in Enum.GetValues(typeof(ItemTableName)))
         {
             LoadItemsFromTable(tableName);
+        }
+    }
+    private void LoadAllSprites()
+    {
+        // Resources 경로에서 모든 Texture2D를 로드
+        Texture2D[] textures = Resources.LoadAll<Texture2D>("ItemSprites"); // 리소스 경로: Resources/ItemSprites/
+        foreach (Texture2D texture in textures)
+        {
+            string itemName = texture.name;
+            if (!itemSprites.ContainsKey(itemName))
+            {
+                // Texture2D로부터 Sprite 생성
+                Sprite sprite = Sprite.Create(
+                    texture,
+                    new Rect(0, 0, texture.width, texture.height),
+                    new Vector2(0.5f, 0.5f) // Pivot 설정: (0.5, 0.5)는 중심
+                );
+
+                itemSprites[itemName] = sprite;
+            }
         }
     }
 
@@ -67,7 +89,7 @@ public class ItemDataLoader
                             ItemData item = CreateItem(tableName, reader);
                             if (item != null && !loadedItems.ContainsKey(item.ID))
                             {
-                                loadedItems[item.ID] = item;
+                                loadedItems[item.ID] = new Item(item, GetSpriteByName(item.Name));
                             }
                         }
                     }
@@ -143,7 +165,7 @@ public class ItemDataLoader
     /// <summary>
     /// ID로 아이템 데이터를 가져오기
     /// </summary>
-    public ItemData GetItemByID(int itemID)
+    public Item GetItemByID(int itemID)
     {
         if (loadedItems.TryGetValue(itemID, out var itemData))
         {
@@ -152,6 +174,17 @@ public class ItemDataLoader
         Debug.LogWarning($"Item with ID {itemID} not found!");
         return null;
     }
+
+    public Sprite GetSpriteByName(string itemName)
+    {
+        if (itemSprites.TryGetValue(itemName, out var sprite))
+        {
+            return sprite;
+        }
+        Debug.LogWarning($"Sprite for item '{itemName}' not found!");
+        return null;
+    }
+
 }
 /// <summary>
 /// 테이블 이름 열거형

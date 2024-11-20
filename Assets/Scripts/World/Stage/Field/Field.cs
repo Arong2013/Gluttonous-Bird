@@ -5,5 +5,11 @@ using UnityEngine;
 
 public class Field : MonoBehaviour
 {
-    List<CharacterMarcine> characterList = new List<CharacterMarcine>();
+    public void Awake()
+    {
+        CharacterDataManager.GetSingleton();
+        var itemdata =  ItemDataLoader.Instance;
+        var monsterData =MonsterDataLoader.GetSingleton();
+        var part = ParticleResourceData.Instance;
+    }
 }

@@ -6,66 +6,7 @@ using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class CharacterData
-{
-    public string Name { get; private set; }
-    public int Level { get; private set; }
 
-    private Dictionary<CharacterStatName, float> baseStats = new Dictionary<CharacterStatName, float>();
-    private Dictionary<CharacterStatName, Dictionary<object, float>> updatedStats = new Dictionary<CharacterStatName, Dictionary<object, float>>();
-
-    public CharacterData(string name, int level)
-    {
-        Name = name;
-        Level = level;
-
-        foreach (CharacterStatName stat in Enum.GetValues(typeof(CharacterStatName)))
-        {
-            baseStats[stat] = 0;
-        }
-    }
-    public void SetBaseStat(CharacterStatName statName, float value)
-    {
-        if (baseStats.ContainsKey(statName))
-        {
-            baseStats[statName] = value;
-            Debug.Log($"{statName}={value}");
-        }
-    }
-    public void UpdateStat(CharacterStatName statName, object source, float value)
-    {
-        if (!updatedStats.ContainsKey(statName))
-        {
-            updatedStats[statName] = new Dictionary<object, float>();
-            updatedStats[statName].Add(source, 0);  
-        }
-        updatedStats[statName][source] += value;
-    }
-
-    public void ChangeStat(CharacterStatName statName, object source, float value)
-    {
-        if (!updatedStats.ContainsKey(statName))
-        {
-            updatedStats[statName] = new Dictionary<object, float>();
-        }
-        updatedStats[statName][source] = value;
-    }
-
-    public float GetStat(CharacterStatName statName)
-    {
-        float baseValue = baseStats.ContainsKey(statName) ? baseStats[statName] : 0;
-
-        if (updatedStats.ContainsKey(statName))
-        {
-            foreach (var bonus in updatedStats[statName].Values)
-            {
-                baseValue += bonus;
-            }
-        }
-
-        return baseValue;
-    }
-}
 
 public enum CharacterStatName
 {
@@ -77,25 +18,23 @@ public enum CharacterStatName
 }
 
 
-public enum CharacterAnimeBool
+public enum CharacterAnimeBoolName
 {
-    CanMove,
-    CanAttack,
     CanRoll,
     CanCombo,
     CanCharging,
-    CanRoar,
-    CanHit,
-    CanBigHit,
+    CanDead,
 }
-public enum CharacterAnimeFloat
+public enum CharacterAnimeFloatName
 {
     ChargingCount,
     SpeedCount,
 }
 public enum CharacterAnimeIntName
 {
-    AttackType
+    AttackType,
+    HitType,
+    RoarType
 }
 public abstract class CharacterMarcine : FieldObject
 {
@@ -110,12 +49,16 @@ public abstract class CharacterMarcine : FieldObject
     public LayerMask EnemyLayer => layerMask;
     public CharacterData characterData { get; protected set; }
     public CharacterState currentBState { get; protected set; }
+    public CharacterAnimatorHandler characterAnimatorHandler { get; protected set; }    
+
+
     public Vector2 currentDir { get; protected set; }
     public float currentDMG { get; protected set; }
     private void Awake()
     {
         rigidbody = GetComponent<Rigidbody>();
         animator = GetComponent<Animator>();
+        characterAnimatorHandler = new CharacterAnimatorHandler(animator);
     }
     private void Start()
     {
@@ -133,24 +76,5 @@ public abstract class CharacterMarcine : FieldObject
         currentBState.Enter();
     }
     public void SetDir(Vector2 dir) { currentDir = dir; }
-
     public void SetDMG(float dmg) { currentDMG = dmg;}
-    public void SetAnimatorBool(CharacterAnimeBool boolname, bool isCan)
-    {
-
-        animator.SetBool(boolname.ToString(), isCan);
-    }
-    public void SetAnimatorFloat(CharacterAnimeFloat FloatType, float count)
-    {
-        animator.SetFloat(FloatType.ToString(), count);
-    }
-    public void SetAnimatorInt(CharacterAnimeIntName intName, int count)
-    {
-        animator.SetInteger(intName.ToString(), count);
-    }
-
-    public bool GetAnimatorBool(CharacterAnimeBool boolname)
-    {
-        return animator.GetBool(boolname.ToString());
-    }
 }

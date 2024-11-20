@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-
 public class ParticleResourceData
 {
     private static ParticleResourceData _instance;

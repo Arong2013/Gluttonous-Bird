@@ -16,6 +16,6 @@ public class MoveState : CharacterState
     public override void Execute()
     {
         character.Move();
-        character.SetAnimatorFloat(CharacterAnimeFloat.SpeedCount, character.currentDir.magnitude);
+        character.characterAnimatorHandler.SetAnimatorValue(CharacterAnimeFloatName.SpeedCount, character.currentDir.magnitude);
     }
 }
