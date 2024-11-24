@@ -24,4 +24,8 @@ public class NormalAttackState : AttackState
     {
 ;
     }
+    public override void Exit()
+    {
+        base.Exit();
+    }
 }

@@ -21,4 +21,9 @@ public class RollState : CharacterState
         base.Enter();
         character.Roll();
     }
+    public override void Exit()
+    {
+        base.Exit();
+        character.RollEnd();
+    }
 }

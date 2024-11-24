@@ -3,18 +3,18 @@ using UnityEngine.EventSystems;
 
 public class AttackBtn : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 {
-    private PlayerMarcine player;
-    public void Init(PlayerMarcine playerMarcine)
+    private WeaponBehavior weaponBehavior;
+    public void Init(WeaponBehavior weaponBehavior)
     {
-        player = playerMarcine; 
+        this.weaponBehavior = weaponBehavior; 
     }
     public void OnPointerDown(PointerEventData eventData)
     {
-        player?.weaponBehavior?.BtnDown();
+        weaponBehavior?.BtnDown();
     }
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        player?.weaponBehavior?.BtnUp();
+        weaponBehavior?.BtnUp();
     }
 }

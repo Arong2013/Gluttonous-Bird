@@ -25,16 +25,16 @@ public class ActionAttack : BehaviorAction
     {
         if (target == null)
             this.target = actionPhase.GetData("target") as Transform;
-        if (character.currentBState.GetType() == typeof(NormalAttackState))
+        if (character.GetCharacterStateType() == typeof(NormalAttackState))
         {
-            character.characterAnimatorHandler.SetAnimatorValue(CharacterAnimeIntName.AttackType, 0);
+            character.SetAnimatorValue(CharacterAnimeIntName.AttackType, 0);
             return BehaviorState.RUNNING;
         }
         else
         {
-            if(character.characterAnimatorHandler.GetAnimatorValue<CharacterAnimeIntName,int>(CharacterAnimeIntName.AttackType) == 0)
+            if(character.GetAnimatorValue<CharacterAnimeIntName,int>(CharacterAnimeIntName.AttackType) == 0)
             {
-                character.characterAnimatorHandler.SetAnimatorValue(CharacterAnimeIntName.AttackType, attackType);
+                character.SetAnimatorValue(CharacterAnimeIntName.AttackType, attackType);
                 return BehaviorState.RUNNING;
             }
             else

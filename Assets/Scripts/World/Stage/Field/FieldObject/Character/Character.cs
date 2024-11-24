@@ -5,6 +5,8 @@ using System.Data;
 using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.TextCore.Text;
+using UnityEngine.UIElements;
 
 
 
@@ -24,6 +26,8 @@ public enum CharacterAnimeBoolName
     CanCombo,
     CanCharging,
     CanDead,
+    CanJump,
+    CanClimb
 }
 public enum CharacterAnimeFloatName
 {
@@ -36,45 +40,68 @@ public enum CharacterAnimeIntName
     HitType,
     RoarType
 }
-public abstract class CharacterMarcine : FieldObject
+public abstract class CharacterMarcine : FieldObject, ICombatable
 {
+
+    [SerializeField] float groundCheckDistance;
     [SerializeField] protected LayerMask layerMask;
-
-
-    protected Rigidbody rigidbody;
-    protected Animator animator;
-
-
+  
 
     public LayerMask EnemyLayer => layerMask;
     public CharacterData characterData { get; protected set; }
-    public CharacterState currentBState { get; protected set; }
-    public CharacterAnimatorHandler characterAnimatorHandler { get; protected set; }    
 
+
+    protected CapsuleCollider capsuleCollider;
+    protected Animator animator;
+    protected CharacterState currentBState;
+    protected CharacterAnimatorHandler CharacterAnimatorHandler;
+    protected CharacterMovementHandler CharacterMovementHandler;
+    protected CharacterCombatHandler CharacterCombatHandler;
 
     public Vector2 currentDir { get; protected set; }
     public float currentDMG { get; protected set; }
+    public bool isGround => IsGrounded();
     private void Awake()
     {
-        rigidbody = GetComponent<Rigidbody>();
         animator = GetComponent<Animator>();
-        characterAnimatorHandler = new CharacterAnimatorHandler(animator);
+        capsuleCollider = GetComponent<CapsuleCollider>();
+        CharacterAnimatorHandler = new CharacterAnimatorHandler(animator);
     }
     private void Start()
     {
-        Init(); 
+        Init();
     }
     public abstract void Init();
+    public void Move() => CharacterMovementHandler.Move();
+    public void Roll() => CharacterMovementHandler.Roll();
+    public void TakeDamge(DamgeData damgeData) => CharacterCombatHandler.TakeDamage(damgeData);
+    public void Climb() => CharacterMovementHandler.Climb();
+    public void Jump()
+    {
+        if (isGround)
+        {
+            CharacterMovementHandler.Jump();
+            CharacterAnimatorHandler.SetAnimatorValue(CharacterAnimeBoolName.CanJump, true);
+        }
 
-    public abstract void Move();
-
-    public abstract void Roll();
+    }
     public void ChangePlayerState(CharacterState newState)
     {
         currentBState?.Exit();
         currentBState = newState;
         currentBState.Enter();
     }
+    public Type GetCharacterStateType() => currentBState.GetType();
+    public CharacterState GetState() => currentBState;
     public void SetDir(Vector2 dir) { currentDir = dir; }
-    public void SetDMG(float dmg) { currentDMG = dmg;}
+    public void SetDMG(float dmg) { currentDMG = dmg; }
+    public bool IsGrounded()
+    {
+        Vector3 checkOrigin = transform.position + Vector3.zero + Vector3.up * 0.1f;
+        var bools = Physics.Raycast(checkOrigin, Vector3.down, groundCheckDistance, layerMask);
+        return bools;
+    }
+    public void RollStart() => CharacterMovementHandler.RollAnimeEvent(capsuleCollider, true); public void RollEnd() => CharacterMovementHandler.RollAnimeEvent(capsuleCollider, false);
+    public void SetAnimatorValue<T>(T type, object value) where T : Enum { CharacterAnimatorHandler.SetAnimatorValue(type, value);}
+    public TResult GetAnimatorValue<T, TResult>(T type) where T : Enum { return CharacterAnimatorHandler.GetAnimatorValue<T,TResult>(type); }
 }

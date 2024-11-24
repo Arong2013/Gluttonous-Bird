@@ -12,14 +12,14 @@ public class MonsterPart : MonoBehaviour, ICombatable, IHarvestable
         this.monsterMarcine = monsterMarcine;
         this.monsterPartData = monsterPartData;
     }
-    public void TakeDamage(float dmg, CharacterAnimeIntName characterAnimeBool,int types)
+    public void TakeDamge(DamgeData damgeData)
     {
-        dmg = dmg * monsterPartData.DisDMG * 0.01f;
+        var dmg = damgeData.Dmg * monsterPartData.DisDMG * 0.01f;
         monsterPartData.HP -= dmg;
         Instantiate(ParticleResourceData.Instance.GetParticle("Blood"), transform.position, Quaternion.identity);
         if (monsterPartData.HP <= 0)
-            monsterMarcine.characterAnimatorHandler.SetAnimatorValue(CharacterAnimeIntName.HitType,1);
-        monsterMarcine.TakeDamge(dmg);
+            monsterMarcine.SetAnimatorValue(CharacterAnimeIntName.HitType, 1);
+        monsterMarcine.TakeDamge(damgeData);
     }
     public bool CanBeHarvested()
     {
@@ -31,10 +31,12 @@ public class MonsterPart : MonoBehaviour, ICombatable, IHarvestable
     }
     public void EndHarvest()
     {
-        monsterMarcine.MonsterRealDead();
+        
     }
     public int GetHarvestReward()
     {
         return Utils.GetRandomItemFromDropTable(monsterPartData.DropItems);
     }
+
+    
 }

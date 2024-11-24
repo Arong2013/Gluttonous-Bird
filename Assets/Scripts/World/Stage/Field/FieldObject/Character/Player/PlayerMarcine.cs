@@ -1,69 +1,59 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System;
 using System.Collections.Generic;
-using UnityEngine.TextCore.Text;
-using static UnityEditor.Progress;
-using System.Linq;
-using Unity.VisualScripting;
 
-
-public class PlayerMarcine : CharacterMarcine, ISubject, ICombatable
+public class PlayerMarcine : CharacterMarcine, ISubject
 {
-    PlayerInputHandler inputHandler { get; set; }
-    public WeaponBehavior weaponBehavior { get; private set; }
-    public Inventory inventory { get; private set; }
-    public bool CanComboBtn { get; private set; }  public void EnableComboBtn() => CanComboBtn = true; public void DisableComboBtn() => CanComboBtn = false;
-     public IHarvestable iHarvestable { get; private set; }
+     Inventory Inventory;
+     PlayerInputHandler inputHandler;
+     PlayerIonsAndBar ionsAndBar;
+     List<IObserver> observers = new List<IObserver>();
+     public  WeaponBehavior WeaponBehavior { get; private set; }
+    
+    public bool CanComboBtn { get; protected set;} void EnableCombo() => CanComboBtn = true; void DisableCombo() => CanComboBtn = false;
+    public IHarvestable CurrentHarvestable { get; private set; }
+    public Action InteractionAction { get; private set; }
 
-    List<IObserver> observers = new List<IObserver>();
-    public Action interaction { get; private set; }
     public override void Init()
     {
         var data = CharacterDataManager.GetSingleton();
         characterData = data.GetCharacterData(1);
 
-        inputHandler = FindObjectOfType<PlayerInputHandler>(); inputHandler.Init(this);
-        weaponBehavior = FindObjectOfType<WeaponBehavior>(); weaponBehavior.Initialize(this);
-        PlayerIonsAndBar playerIonsAndBar = FindObjectOfType<PlayerIonsAndBar>(); playerIonsAndBar.Initialize(this);
+        // 핸들러 초기화
+        inputHandler = FindObjectOfType<PlayerInputHandler>();
+        inputHandler.Init(this);
 
-        currentBState = new IdleState(this, animator);        
+        WeaponBehavior = FindObjectOfType<WeaponBehavior>();
+        WeaponBehavior.Initialize(this);
+
+        ionsAndBar = FindObjectOfType<PlayerIonsAndBar>();
+        ionsAndBar.Initialize(this);
+
+
+        currentBState = new IdleState(this, animator);
+        CharacterMovementHandler = new PlayerMovementHandler(this);
+        CharacterCombatHandler = new PlayerCombatHandler(this);
     }
+
     private void Update()
     {
-        if(Mathf.Abs(currentDir.x) > 0.1f || Mathf.Abs(currentDir.y) > 0.1f && currentBState.GetType() != typeof(MoveState))
+        // 움직임 상태 업데이트
+        if ((Mathf.Abs(currentDir.x) > 0.1f || Mathf.Abs(currentDir.y) > 0.1f) && currentBState.GetType() != typeof(MoveState))
         {
-            characterAnimatorHandler.SetAnimatorValue(CharacterAnimeFloatName.SpeedCount, currentDir.magnitude); 
+            CharacterAnimatorHandler.SetAnimatorValue(CharacterAnimeFloatName.SpeedCount, currentDir.magnitude);
         }
+
         currentBState?.Execute();
     }
-    public override void Move()
+    public void ToggleClimb()
     {
-        float speed = characterData.GetStat(CharacterStatName.SPD) * currentDir.magnitude;
-        Vector3 moveDirection = new Vector3(currentDir.x, 0, 0).normalized * speed * Time.deltaTime;  print(speed);
-        rigidbody.MovePosition(transform.position + moveDirection);
-        if (currentDir.x != 0)
-        {
-            transform.rotation = Quaternion.Euler(0, currentDir.x > 0 ? 90 : -90, 0);
-        }
+        bool canClimb = CharacterAnimatorHandler.GetAnimatorValue<CharacterAnimeBoolName, bool>(CharacterAnimeBoolName.CanClimb);
+        CharacterAnimatorHandler.SetAnimatorValue(CharacterAnimeBoolName.CanClimb, !canClimb);
     }
-    public override void Roll()
-    {
-        rigidbody.velocity = Vector3.zero;
-        rigidbody.angularVelocity = Vector3.zero;
+    public void RegisterObserver(IObserver observer) => observers.Add(observer);
 
-        Vector3 backwardForce = transform.forward * 5f;
-        rigidbody.AddForce(backwardForce, ForceMode.Impulse);
-    }
-    public void RegisterObserver(IObserver observer)
-    {
-        observers.Add(observer);
-    }
-
-    public void UnregisterObserver(IObserver observer)
-    {
-        observers.Remove(observer);
-    }
+    public void UnregisterObserver(IObserver observer) => observers.Remove(observer);
+    void WeaponAttackStart() => WeaponBehavior.ColliderSet(true); public void WeaponAttackEnd() => WeaponBehavior.ColliderSet(false);
     public void NotifyObservers()
     {
         foreach (var observer in observers)
@@ -71,100 +61,110 @@ public class PlayerMarcine : CharacterMarcine, ISubject, ICombatable
             observer.UpdateObserver();
         }
     }
-    public void TakeDamage(float dmg, CharacterAnimeIntName characterAnimeBool, int types)
+
+    // 채집 로직
+    public void HarvestObject()
     {
-        if (types > 0)
+        if (CurrentHarvestable == null) return;
+
+        var itemID = CurrentHarvestable.GetHarvestReward();
+        var item = ItemDataLoader.Instance.GetItemByID(itemID);
+
+        if (Inventory.AddItem(item))
         {
-            currentDMG = dmg;   
-            characterAnimatorHandler.SetAnimatorValue(characterAnimeBool,types);
-            characterData.UpdateStat(CharacterStatName.HP, this, -dmg);
-            NotifyObservers();
+            Debug.Log($"Item {itemID} added to inventory.");
         }
         else
         {
-
+            Debug.Log($"Failed to add item {itemID}. Inventory full.");
         }
     }
-    public void HarvestObj()
+    private void OnTriggerEnter(Collider other)
     {
-       var ItemID = iHarvestable.GetHarvestReward();
-        var item = ItemDataLoader.Instance.GetItemByID(ItemID); 
-        if(inventory.AddItem(item))
+        if (other.TryGetComponent<IInteractable>(out IInteractable interactable))
         {
 
-        }
-        else
-        { 
+            InteractionAction += () =>interactable.InteractEnter(this);
         }
     }
-    public void OnTriggerEnter(Collider other)
+    private void OnTriggerExit(Collider other)
     {
-        if(other.gameObject.TryGetComponent<IHarvestable>(out IHarvestable monsterMarcine) && monsterMarcine.CanBeHarvested())
+        if (other.TryGetComponent<IInteractable>(out IInteractable interactable))
         {
-            iHarvestable = monsterMarcine;
-            interaction = null;
-            interaction += HarvestObj;
-        }
-    }
-    public void OnTriggerExit(Collider other)
-    {
-        if (other.gameObject.TryGetComponent<IHarvestable>(out IHarvestable monsterMarcine))
-        {
-            iHarvestable = null;
-            interaction = null;
+            InteractionAction = null;
         }
     }
 }
 public class Inventory
 {
-    PlayerData playerData;  
-    List<Item> items;
+    private PlayerData playerData;
+    private List<Item> items;
+
     public Inventory(List<Item> items, PlayerData playerData)
     {
         this.items = items;
-        this.playerData = playerData;   
+        this.playerData = playerData;
     }
-    public bool AddItem(Item _item)
+
+    // 아이템 추가
+    public bool AddItem(Item item)
     {
-        if (_item.ItemData is ConsumableItemData countItem)
+        if (item.ItemData is ConsumableItemData consumable)
         {
-            var matchingItems = items.FindAll(x => x.ItemData.ID == countItem.ID);
-            if (matchingItems.Count > 0)
+            return AddConsumableItem(consumable);
+        }
+
+        if (items.Count >= playerData.InventoryMaxCount)
+        {
+            return false;
+        }
+
+        items.Add(item);
+        return true;
+    }
+
+    private bool AddConsumableItem(ConsumableItemData consumable)
+    {
+        var matchingItems = items.FindAll(x => x.ItemData.ID == consumable.ID);
+
+        foreach (var matchingItem in matchingItems)
+        {
+            int excess = AddAmountAndGetExcess(matchingItem.ItemData as ConsumableItemData, consumable.Amount);
+            SetAmount(consumable, -excess);
+
+            if (consumable.Amount <= 0)
             {
-                foreach (var matchingItem in matchingItems)
-                {
-                    var less =  AddAmountAndGetExcess(matchingItem.ItemData as ConsumableItemData, countItem.Amount);
-                   SetAmount(countItem, -less);
-                    if (countItem.Amount <= 0)
-                        return true;
-                }
+                return true;
             }
         }
         if (items.Count >= playerData.InventoryMaxCount)
+        {
             return false;
-        items.Add(_item);
+        }
+        items.Add(new Item(consumable,ItemDataLoader.Instance.GetSpriteByName(consumable.Name)));
         return true;
     }
-    public int AddAmountAndGetExcess(ConsumableItemData consumableItemData,int amount)
-    {
-        int nextAmount = consumableItemData.Amount + amount;
-        SetAmount(consumableItemData,nextAmount);
-        return (nextAmount > consumableItemData.MaxAmount) ? (nextAmount - consumableItemData.MaxAmount) : 0;
-    }
-    public int Seperate(ConsumableItemData consumableItemData,int amount)
-    {
-        if (consumableItemData.Amount <= 1) return 0;
 
-        if (amount > consumableItemData.Amount - 1)
-            amount = consumableItemData.Amount - 1;
-
-        consumableItemData.Amount -= amount;
-        return amount;
-    }
-    public void SetAmount(ConsumableItemData consumableItemData,int amount)
+    public int AddAmountAndGetExcess(ConsumableItemData consumable, int amount)
     {
-        consumableItemData.Amount = Mathf.Clamp(amount, 0, consumableItemData.MaxAmount);
+        int newAmount = consumable.Amount + amount;
+        SetAmount(consumable, newAmount);
+
+        return Mathf.Max(0, newAmount - consumable.MaxAmount);
     }
 
-    
+    public void SetAmount(ConsumableItemData consumable, int amount)
+    {
+        consumable.Amount = Mathf.Clamp(amount, 0, consumable.MaxAmount);
+    }
+
+    public int SeparateItem(ConsumableItemData consumable, int amount)
+    {
+        if (consumable.Amount <= 1) return 0;
+
+        int splitAmount = Mathf.Min(amount, consumable.Amount - 1);
+        consumable.Amount -= splitAmount;
+
+        return splitAmount;
+    }
 }

@@ -41,4 +41,10 @@ public class RoarState : CharacterState
     {
 
     }
+
+    public override void Exit()
+    {
+        base.Exit();
+
+    }
 }

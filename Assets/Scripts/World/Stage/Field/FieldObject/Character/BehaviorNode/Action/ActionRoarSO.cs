@@ -18,10 +18,10 @@ public class ActionRoar : BehaviorAction
         if (target == null)
             this.target = actionPhase.GetData("target") as Transform;
 
-        if (character.currentBState.GetType() == typeof(RoarState))
+        if (character.GetCharacterStateType() == typeof(RoarState))
         {
             canRoar = true;
-            character.characterAnimatorHandler.SetAnimatorValue(CharacterAnimeIntName.RoarType, 0);
+            character.SetAnimatorValue(CharacterAnimeIntName.RoarType, 0);
             return BehaviorState.RUNNING;
         }
         else
@@ -30,7 +30,7 @@ public class ActionRoar : BehaviorAction
                 return BehaviorState.SUCCESS;
             else
             {
-                character.characterAnimatorHandler.SetAnimatorValue(CharacterAnimeIntName.RoarType, 1);
+                character.SetAnimatorValue(CharacterAnimeIntName.RoarType, 1);
                 return BehaviorState.RUNNING;
             }
         }

@@ -30,12 +30,12 @@ public class ActionChessTarget : BehaviorAction
         if (distanceToTarget <= stopDistance)
         {
             character.SetDir(new Vector2(0, 0));
-            character.characterAnimatorHandler.SetAnimatorValue(CharacterAnimeFloatName.SpeedCount, 0f);
+            character.SetAnimatorValue(CharacterAnimeFloatName.SpeedCount, 0f);
             return BehaviorState.SUCCESS; // 행동 완료 상태 반환
         }
         else
         {
-            character.characterAnimatorHandler.SetAnimatorValue(CharacterAnimeFloatName.SpeedCount, 0.1f);
+            character.SetAnimatorValue(CharacterAnimeFloatName.SpeedCount, 0.1f);
             Vector3 direction = (target.position - character.transform.position).normalized;
             character.SetDir(new Vector2(direction.x, 0));
             return BehaviorState.RUNNING; // 행동 실행 중 상태 반환

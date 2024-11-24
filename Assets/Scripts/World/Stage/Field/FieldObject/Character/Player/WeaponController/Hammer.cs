@@ -8,21 +8,21 @@ public class Hammer : WeaponBehavior
     List<MonsterMarcine> monsterMarcines = new List<MonsterMarcine>();
     public override void BtnDown()
     {
-        player.characterAnimatorHandler.SetAnimatorValue(CharacterAnimeIntName.AttackType,1);
+        player.SetAnimatorValue(CharacterAnimeIntName.AttackType,1);
     }
     public override void BtnUp()
     {
-        if (player.currentBState is AttackState state)
+        if (player.GetState()  is AttackState attackState)
         {
-            state.BtnUp();
+            attackState.BtnUp();
         }
     }
     private void OnTriggerEnter(Collider other)
     {
         if (other.TryGetComponent<MonsterPart>(out MonsterPart combatable) && !other.GetComponent<PlayerMarcine>() && !monsterMarcines.Contains(combatable.monsterMarcine))
         {
-          
-            combatable.TakeDamage(weaponDMG * disdmg * 0.01f,0,0);
+            var data = new DamgeData(weaponDMG * disdmg * 0.01f, 0, this);
+            combatable.TakeDamge(data);
         }
     }
 }

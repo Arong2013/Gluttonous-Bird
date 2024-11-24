@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-
 public static class Utils
 {
+
     /// <summary>
     /// 드롭 테이블에서 확률적으로 아이템 ID를 반환합니다.
     /// </summary>

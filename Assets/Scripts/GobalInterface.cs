@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+public interface IInteractable
+{
+    void InteractEnter(PlayerMarcine player);
+}
 
 public enum BehaviorState
 {
@@ -8,9 +12,16 @@ public enum BehaviorState
     RUNNING,   
     FAILURE    
 }
+public enum ObjectLayerMask
+{
+    Ladder,
+    Player,
+    Monster,
+    Ground
+}
 public interface ICombatable
 {
-    void TakeDamage(float dmg,CharacterAnimeIntName characterAnimeBoo,int types);
+    public void TakeDamge(DamgeData damgeData);
 }
 public interface ISubject
 {
