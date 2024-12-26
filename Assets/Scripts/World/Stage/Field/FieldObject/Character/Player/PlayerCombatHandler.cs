@@ -2,20 +2,24 @@
 using UnityEngine.TextCore.Text;
 public class PlayerCombatHandler : CharacterCombatHandler
 {
-    PlayerMarcine PlayerMarcine;
+    PlayerMarcine character;
     private Rigidbody rigidbody;
-    public PlayerCombatHandler(CharacterMarcine character)
+    public PlayerCombatHandler(CharacterMarcine character, Rigidbody rigidbody)
     {
-        this.PlayerMarcine = character as PlayerMarcine;
-        this.rigidbody = character.GetComponent<Rigidbody>();
+        this.character = character as PlayerMarcine;
+        this.rigidbody = rigidbody;
     }
     public override void TakeDamage(DamgeData damgeData)
     {
-        PlayerMarcine.characterData.UpdateBaseStat(CharacterStatName.HP, -damgeData.Dmg);
-        PlayerMarcine.NotifyObservers();
+        character.characterData.UpdateBaseStat(CharacterStatName.HP, -damgeData.Dmg);
+        character.NotifyObservers();
         if (damgeData.DamgeAnimeType > 0)
         {
-            PlayerMarcine.SetAnimatorValue(CharacterAnimeIntName.HitType, damgeData.DamgeAnimeType); 
+            character.SetAnimatorValue(CharacterAnimeIntName.HitType, damgeData.DamgeAnimeType); 
         }
+    }
+    public void Attack(ICombatable combatable, DamgeData damgeData)
+    {
+        combatable.TakeDamge(damgeData);
     }
 }

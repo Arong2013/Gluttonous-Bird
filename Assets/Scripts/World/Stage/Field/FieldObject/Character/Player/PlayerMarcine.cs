@@ -1,135 +1,147 @@
 ﻿using UnityEngine;
 using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
+using UnityEngine.TextCore.Text;
+
+
 
 public class PlayerMarcine : CharacterMarcine, ISubject
 {
-     Inventory Inventory;
-     PlayerInputHandler inputHandler;
-     PlayerIonsAndBar ionsAndBar;
-     List<IObserver> observers = new List<IObserver>();
-     public  WeaponBehavior WeaponBehavior { get; private set; }
-    
-    public bool CanComboBtn { get; protected set;} void EnableCombo() => CanComboBtn = true; void DisableCombo() => CanComboBtn = false;
-    public IHarvestable CurrentHarvestable { get; private set; }
-    public Action InteractionAction { get; private set; }
-
+    PlayerData playerData = new PlayerData();
+    List<IObserver> observers = new List<IObserver>();
+    PlayerQuestHandler questHandler;
+    public Action InteractionBtnAction { get; private set; }
+    public WeaponBehavior WeaponBehavior { get; private set; }
+    public Inventory inventory { get; private set; }
+    public bool CanComboBtn { get; protected set; }
+    void EnableCombo() => CanComboBtn = true; void DisableCombo() => CanComboBtn = false;
+    public bool CanWalk => (Mathf.Abs(currentDir.x) > 0.1f || Mathf.Abs(currentDir.y) > 0.1f) && currentBState.GetType() != typeof(MoveState);
     public override void Init()
     {
-        var data = CharacterDataManager.GetSingleton();
-        characterData = data.GetCharacterData(1);
+        currentBState = new IdleState(this, animator);
+        characterData = CharacterData.CreatPlayerData();
+        inventory = new Inventory(playerData);
 
-        // 핸들러 초기화
-        inputHandler = FindObjectOfType<PlayerInputHandler>();
-        inputHandler.Init(this);
+        var TestItem = ItemDataLoader.Instance.GetItemDataByID(1).CreatItem();
+        var TestItem2 = ItemDataLoader.Instance.GetItemDataByID(1).CreatItem();
+        inventory.AddItem(TestItem); inventory.AddItem(TestItem2);
 
         WeaponBehavior = FindObjectOfType<WeaponBehavior>();
         WeaponBehavior.Initialize(this);
+        LinkUi();
+        SetHandler();
 
-        ionsAndBar = FindObjectOfType<PlayerIonsAndBar>();
-        ionsAndBar.Initialize(this);
+        TakeDamge(new DamgeData(20, 0, this));
+        NotifyObservers();
 
-
-        currentBState = new IdleState(this, animator);
-        CharacterMovementHandler = new PlayerMovementHandler(this);
-        CharacterCombatHandler = new PlayerCombatHandler(this);
     }
 
     private void Update()
     {
-        // 움직임 상태 업데이트
-        if ((Mathf.Abs(currentDir.x) > 0.1f || Mathf.Abs(currentDir.y) > 0.1f) && currentBState.GetType() != typeof(MoveState))
-        {
-            CharacterAnimatorHandler.SetAnimatorValue(CharacterAnimeFloatName.SpeedCount, currentDir.magnitude);
-        }
-
+        UpdataMovement();
         currentBState?.Execute();
+    }
+    void SetHandler()
+    {
+        CharacterMovementHandler = new PlayerMovementHandler(this, rigidbody);
+        CharacterCombatHandler = new PlayerCombatHandler(this, rigidbody);
+        questHandler = new PlayerQuestHandler(playerData);
+        characterInteractionHandler = new PlayerInteractionHandler(this, rigidbody);
+    }
+    void LinkUi() => Utils.SetPlayerMarcineOnUI().ForEach(x => x.Initialize(this));
+    void UpdataMovement()
+    {
+        if (IsFalling())
+        {
+            SetAnimatorValue(CharacterAnimeIntName.MovementType, (int)MovementType.Falling);
+            return;
+        }
+        if (CanWalk)
+            SetAnimatorValue(CharacterAnimeIntName.MovementType, (int)MovementType.Walk);
     }
     public void ToggleClimb()
     {
-        bool canClimb = CharacterAnimatorHandler.GetAnimatorValue<CharacterAnimeBoolName, bool>(CharacterAnimeBoolName.CanClimb);
-        CharacterAnimatorHandler.SetAnimatorValue(CharacterAnimeBoolName.CanClimb, !canClimb);
+        int canClimb = (CharacterAnimatorHandler.GetAnimatorValue<CharacterAnimeIntName, int>(CharacterAnimeIntName.InteractionType) != (int)InteractionType.Climb) ? (int)InteractionType.Climb : 0;
+        SetAnimatorValue(CharacterAnimeIntName.InteractionType, canClimb);
     }
-    public void RegisterObserver(IObserver observer) => observers.Add(observer);
-
-    public void UnregisterObserver(IObserver observer) => observers.Remove(observer);
+    public void ToggleRoll()
+    {
+        if (characterData.GetStat(CharacterStatName.SP) > characterData.GetStat(CharacterStatName.RollSP))
+        {
+            SetAnimatorValue(CharacterAnimeIntName.MovementType, (int)MovementType.Roll);
+        }
+    }
     void WeaponAttackStart() => WeaponBehavior.ColliderSet(true); public void WeaponAttackEnd() => WeaponBehavior.ColliderSet(false);
-    public void NotifyObservers()
-    {
-        foreach (var observer in observers)
-        {
-            observer.UpdateObserver();
-        }
-    }
+    public void SetQuest(QuestData questData) => questHandler.SetQuest(questData);
 
-    // 채집 로직
-    public void HarvestObject()
-    {
-        if (CurrentHarvestable == null) return;
-
-        var itemID = CurrentHarvestable.GetHarvestReward();
-        var item = ItemDataLoader.Instance.GetItemByID(itemID);
-
-        if (Inventory.AddItem(item))
-        {
-            Debug.Log($"Item {itemID} added to inventory.");
-        }
-        else
-        {
-            Debug.Log($"Failed to add item {itemID}. Inventory full.");
-        }
-    }
     private void OnTriggerEnter(Collider other)
     {
         if (other.TryGetComponent<IInteractable>(out IInteractable interactable))
         {
-
-            InteractionAction += () =>interactable.InteractEnter(this);
+            InteractionBtnAction = () => interactable.InteractEnter(this);
         }
     }
     private void OnTriggerExit(Collider other)
     {
         if (other.TryGetComponent<IInteractable>(out IInteractable interactable))
         {
-            InteractionAction = null;
+            InteractionBtnAction = null;
         }
     }
 }
 public class Inventory
 {
     private PlayerData playerData;
-    private List<Item> items;
-
-    public Inventory(List<Item> items, PlayerData playerData)
+    private List<Item> playerItems;
+    public List<Item> items
     {
-        this.items = items;
+        get
+        {
+            playerItems.RemoveAll(item => item is CountableItem countable && countable.Amount <= 0);
+            return playerItems;
+        }
+        private set { }
+    }
+
+    public Inventory(PlayerData playerData)
+    {
+        this.playerItems = playerData.Items;
         this.playerData = playerData;
     }
 
-    // 아이템 추가
+    public Item GetItem(int index)
+    {
+        if (index >= 0 && index < items.Count) // 또는 items.Length, 타입에 따라
+        {
+            return items[index];
+        }
+        return null;
+    }
+
     public bool AddItem(Item item)
     {
-        if (item.ItemData is ConsumableItemData consumable)
+        if (item is CountableItem consumable)
         {
             return AddConsumableItem(consumable);
         }
 
         if (items.Count >= playerData.InventoryMaxCount)
         {
+
             return false;
         }
-
         items.Add(item);
         return true;
     }
 
-    private bool AddConsumableItem(ConsumableItemData consumable)
+    private bool AddConsumableItem(CountableItem consumable)
     {
-        var matchingItems = items.FindAll(x => x.ItemData.ID == consumable.ID);
+        var matchingItems = items.FindAll(x => x.ID == consumable.ID);
 
         foreach (var matchingItem in matchingItems)
         {
-            int excess = AddAmountAndGetExcess(matchingItem.ItemData as ConsumableItemData, consumable.Amount);
+            int excess = AddAmountAndGetExcess(matchingItem as CountableItem, consumable.Amount);
             SetAmount(consumable, -excess);
 
             if (consumable.Amount <= 0)
@@ -141,11 +153,11 @@ public class Inventory
         {
             return false;
         }
-        items.Add(new Item(consumable,ItemDataLoader.Instance.GetSpriteByName(consumable.Name)));
+        items.Add(consumable);
         return true;
     }
 
-    public int AddAmountAndGetExcess(ConsumableItemData consumable, int amount)
+    public int AddAmountAndGetExcess(CountableItem consumable, int amount)
     {
         int newAmount = consumable.Amount + amount;
         SetAmount(consumable, newAmount);
@@ -153,12 +165,11 @@ public class Inventory
         return Mathf.Max(0, newAmount - consumable.MaxAmount);
     }
 
-    public void SetAmount(ConsumableItemData consumable, int amount)
+    public void SetAmount(CountableItem consumable, int amount)
     {
         consumable.Amount = Mathf.Clamp(amount, 0, consumable.MaxAmount);
     }
-
-    public int SeparateItem(ConsumableItemData consumable, int amount)
+    public int SeparateItem(CountableItem consumable, int amount)
     {
         if (consumable.Amount <= 1) return 0;
 

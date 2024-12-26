@@ -1,55 +1,28 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 
-[CreateAssetMenu(fileName = "ConditionCloseTarget", menuName = "Behavior/Conditions/ConditionCloseTarget")]
-public class ConditionCloseTargetSO : BehaviorConditionSO
+[CreateAssetMenu(fileName = "ConditionParabolicMover", menuName = "Behavior/Conditions/ConditionParabolicMover")]
+public class ConditionParabolicMoverSO : BehaviorConditionSO
 {
-    [Header("Detection Settings")]
-    [SerializeField] private float detectionRadius = 10f; // 감지 반경
-    [SerializeField] private LayerMask enemyLayer; // 감지할 적 레이어
+    [SerializeField] private LayerMask obstacleLayer;
+
 
     public override BehaviorCondition CreateCondition()
     {
-        return new ConditionCloseTarget(detectionRadius, enemyLayer);
+        return new ConditionParabolicMover(obstacleLayer);
     }
 }
-public class ConditionCloseTarget : BehaviorCondition
-{
-    private float detectionRadius;
-    private LayerMask enemyLayer;
 
-    public ConditionCloseTarget(float detectionRadius, LayerMask enemyLayer)
+public class ConditionParabolicMover : BehaviorCondition
+{
+    LayerMask obstacleLayer;    
+    public ConditionParabolicMover(LayerMask layerMask)
     {
-        this.detectionRadius = detectionRadius;
-        this.enemyLayer = enemyLayer;
+        obstacleLayer = layerMask;  
     }
+
     public override BehaviorState Execute()
     {
-        // 자기 위치를 기준으로 감지
-        Collider[] detectedEnemies = Physics.OverlapSphere(character.transform.position, detectionRadius, enemyLayer);
-
-        if (detectedEnemies.Length > 0)
-        {
-            Transform closestEnemy = GetClosestEnemy(detectedEnemies);
-            actionPhase.SetData("target", closestEnemy);
-            return BehaviorState.SUCCESS;
-        }
-        return BehaviorState.FAILURE;
-    }
-
-    private Transform GetClosestEnemy(Collider[] enemies)
-    {
-        Transform closest = null;
-        float closestDistance = float.MaxValue;
-
-        foreach (var enemy in enemies)
-        {
-            float distance = Vector3.Distance(character.transform.position, enemy.transform.position);
-            if (distance < closestDistance)
-            {
-                closestDistance = distance;
-                closest = enemy.transform;
-            }
-        }
-        return closest;
+        return BehaviorState.SUCCESS;
     }
 }

@@ -21,8 +21,12 @@ public class Hammer : WeaponBehavior
     {
         if (other.TryGetComponent<MonsterPart>(out MonsterPart combatable) && !other.GetComponent<PlayerMarcine>() && !monsterMarcines.Contains(combatable.monsterMarcine))
         {
-            var data = new DamgeData(weaponDMG * disdmg * 0.01f, 0, this);
+            var data = new DamgeData(player.currentDMG , 0, player);
             combatable.TakeDamge(data);
+            if(player.GetState() is NormalAttackState normalAttackState)
+            {
+                normalAttackState.PlayHitStop();   
+            }
         }
     }
 }

@@ -1,6 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+public interface IIterator<T>
+{
+    bool HasNext();
+    T Next();
+}
+public interface IAggregate<T>
+{
+    IIterator<T> CreateIterator();
+}
+
+public interface IUseableItem
+{
+    public void Use(PlayerMarcine playerMarcine);
+}
 public interface IInteractable
 {
     void InteractEnter(PlayerMarcine player);
@@ -34,6 +48,10 @@ public interface IObserver
     void UpdateObserver();
 }
 
+public interface IPlayerUesableUI
+{
+    void Initialize(PlayerMarcine playerMarcine);
+}
 public interface IHarvestable
 {
     bool CanBeHarvested(); // 갈무리 가능한지 확인

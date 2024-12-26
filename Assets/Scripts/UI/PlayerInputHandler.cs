@@ -2,7 +2,7 @@
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-public class PlayerInputHandler : MonoBehaviour
+public class PlayerInputHandler : MonoBehaviour, IPlayerUesableUI
 {
     private PlayerMarcine playerMarcine;
     [SerializeField] Joystick joystick;
@@ -10,14 +10,13 @@ public class PlayerInputHandler : MonoBehaviour
     [SerializeField] Button roolBtn;
     [SerializeField] Button JumpBtn;
     [SerializeField] Button interactionBtn;
-    public void Init(PlayerMarcine _playerMarcine)
+    public void Initialize(PlayerMarcine playerMarcine)
     {
-        playerMarcine = _playerMarcine;
+        this.playerMarcine = playerMarcine;
         attackBtn.Init(playerMarcine.WeaponBehavior);
-        roolBtn.onClick.AddListener(() => { playerMarcine.SetAnimatorValue(CharacterAnimeBoolName.CanRoll,true); });
-        interactionBtn.onClick.AddListener(() => playerMarcine.InteractionAction?.Invoke());
-        JumpBtn.onClick.AddListener(() => playerMarcine.Jump());
-       
+        roolBtn.onClick.AddListener(() => playerMarcine.ToggleRoll());
+        interactionBtn.onClick.AddListener(() => playerMarcine.InteractionBtnAction?.Invoke());
+        JumpBtn.onClick.AddListener(() => playerMarcine.SetAnimatorValue(CharacterAnimeIntName.MovementType, (int)MovementType.Jump));
     }
     public void Update()
     {

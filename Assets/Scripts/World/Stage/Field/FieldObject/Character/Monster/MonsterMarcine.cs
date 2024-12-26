@@ -15,22 +15,26 @@ public class MonsterMarcine : CharacterMarcine
     public override void Init()
     {
         currentBState = new IdleState(this,animator);
-        CharacterCombatHandler = new MonsterCombatHandler(this);
-        CharacterMovementHandler = new MonsterMovementHandler(this);    
-
-        behaviorSequencesSO.ForEach(sequence => behaviorSequences.Add(sequence.CreatBehaviorSequence(this)));
         var dataloder = MonsterDataLoader.GetSingleton();
         CharacterData monsterData = dataloder.GetMonsterBaseData(baseMonsterID);
         characterData = monsterData;
-
         foreach (var part in monsterParts)
         {
-            var partData = dataloder.GetMonsterPartData(baseMonsterID, part.BasePartID);
-            if (partData != null)
-            {
-                part.Init(this, partData); 
-            }
+            if (dataloder.GetMonsterPartData(baseMonsterID, part.BasePartID) is { } partData)
+                part.Init(this, partData);
         }
+        behaviorSequencesSO.ForEach(sequence => behaviorSequences.Add(sequence.CreatBehaviorSequence(this)));
+
+
+
+        SetHandler();
+        
+    }
+
+    void SetHandler()
+    {
+        CharacterMovementHandler = new MonsterMovementHandler(this, rigidbody);
+        CharacterCombatHandler = new MonsterCombatHandler(this, rigidbody);
     }
     private void Update()
     {
@@ -46,9 +50,12 @@ public class MonsterMarcine : CharacterMarcine
     }
     public void Dead()
     {
+        if(LastTarget is PlayerMarcine player)
+        {
+            QuestEvents.MonsterKilled(baseMonsterID);
+        }
         CharacterAnimatorHandler.SetAnimatorValue(CharacterAnimeBoolName.CanDead, true);
     }
     public void SetHarvest(bool can) { IsHarvest = can; }
     public void SetLastTarget(object tag) => LastTarget = tag;
-
 }

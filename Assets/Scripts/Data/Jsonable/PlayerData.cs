@@ -5,5 +5,8 @@ using System.Collections.Generic;
 public class PlayerData
 {
     List<Item> items;
-   public  int InventoryMaxCount;
+    public  int InventoryMaxCount = 30;
+    List<Quest> runningQuest;
+    public List<Item> Items => items ??= new List<Item>();   
+    public List<Quest> GetRunningQuest() => runningQuest ??= new List<Quest>(); 
 }

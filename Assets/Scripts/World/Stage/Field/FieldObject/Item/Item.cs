@@ -1,62 +1,28 @@
 ﻿using System.Collections.Generic;
+using System.Data;
 using UnityEngine;
+public abstract class ItemData
+{
+    public readonly int ID;
+    public readonly string Name;
+    public readonly string Information;
+    public abstract Item CreatItem();
 
-public class ItemData
-{
-   public int ID { get; set; }
-    public string IconName { get; set; }
-    public string Name { get; set; }
-    public string Information { get; set; }
-}
-
-public class HammerItemData : ItemData
-{
-    public int ATK { get; set; }
-}
-
-public abstract class WeaponItemData : ItemData
-{
-    public string PrefabsName { get; set; }
-}
-public class ArmorItemData : ItemData
-{
-    public int DEF { get; set; }
-}
-public abstract class ConsumableItemData : ItemData
-{
-    public int Amount { get; set; }
-    public int MaxAmount { get; set; }
-}
-public class RecoveryItemData : ConsumableItemData
-{
-    private Dictionary<CharacterStatName, float> recoveryStats = new Dictionary<CharacterStatName, float>();
-    public void SetRecoveryStat(CharacterStatName statName, float amount)
+    public ItemData(IDataReader reader)
     {
-        if (recoveryStats.ContainsKey(statName))
-        {
-            recoveryStats[statName] = amount;
-        }
-        else
-        {
-            recoveryStats.Add(statName, amount);
-        }
-    }
-    public float GetRecoveryStat(CharacterStatName statName)
-    {
-        return recoveryStats.ContainsKey(statName) ? recoveryStats[statName] : 0;
-    }
-    public Dictionary<CharacterStatName, float> GetAllRecoveryStats()
-    {
-        return new Dictionary<CharacterStatName, float>(recoveryStats);
+        ID = reader.GetInt32(0);
+        Name = reader.GetString(1);
+        Information = reader.GetString(2);
     }
 }
-public class Item
+public abstract class Item
 {
-   public Sprite icon { get; set; }
-   public ItemData ItemData { get; set; }
-    public Item(ItemData itemData,Sprite sprite)
+    public readonly int ID; 
+    Sprite ItemIcon;
+    public Sprite icon => ItemIcon ??= ItemDataLoader.Instance.GetSpriteByName(ItemData.Name);
+    public ItemData ItemData => ItemDataLoader.Instance.GetItemDataByID(ID);
+    public Item(ItemData itemData)
     {
-        ItemData = itemData;
-        icon = sprite;  
+        this.ID = itemData.ID;   
     }
 }

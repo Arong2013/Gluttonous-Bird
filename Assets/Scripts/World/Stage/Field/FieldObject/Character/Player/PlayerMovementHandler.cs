@@ -1,13 +1,15 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.TextCore.Text;
 public class PlayerMovementHandler : CharacterMovementHandler
 {
     private PlayerMarcine character;
     private Rigidbody rigidbody;
-    public PlayerMovementHandler(CharacterMarcine character)
+    Action ItemAction;
+    public PlayerMovementHandler(CharacterMarcine character,Rigidbody rigidbody)
     {
         this.character = character as PlayerMarcine;
-        this.rigidbody = character.GetComponent<Rigidbody>();
+        this.rigidbody = rigidbody;
     }
     public override void Move()
     {
@@ -21,6 +23,7 @@ public class PlayerMovementHandler : CharacterMovementHandler
     }
     public override void Roll()
     {
+        character.characterData.UpdateBaseStat(CharacterStatName.SP, -character.characterData.GetStat(CharacterStatName.RollSP));
         rigidbody.velocity = Vector3.zero;
         rigidbody.angularVelocity = Vector3.zero;
 
@@ -33,32 +36,11 @@ public class PlayerMovementHandler : CharacterMovementHandler
         rigidbody.angularVelocity = Vector3.zero;
         rigidbody.AddForce(Vector3.up * 5f, ForceMode.Impulse);
     }
-
-    public override void Climb()
-    {
-        var dirY = character.currentDir.y;
-        Vector3 dir;
-        if (dirY > 0)
-            dir = Vector3.up;
-        else if (dirY == 0)
-            dir = Vector3.zero;
-        else
-            dir = Vector3.down;
-        Vector3 climbMovement = character.transform.position + dir * 5f * Time.deltaTime;
-        rigidbody.MovePosition(climbMovement);
-    }
-
     public override void RollAnimeEvent(CapsuleCollider capsuleCollider, bool force)
     {
         if(force)
-        {
-            rigidbody.useGravity = false;
-            capsuleCollider.enabled = false;    
-        }
+            capsuleCollider.enabled = false;
         else
-        {
-            rigidbody.useGravity = true;
             capsuleCollider.enabled = true;
-        }
     }
 }

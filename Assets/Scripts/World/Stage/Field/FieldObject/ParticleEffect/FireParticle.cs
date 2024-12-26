@@ -10,7 +10,6 @@ public class FireParticle : MonoBehaviour
     {
         combatables.Clear();
     }
-
     private void OnParticleCollision(GameObject other)
     {
         if (other.TryGetComponent<ICombatable>(out ICombatable target) && !combatables.Contains(target))

@@ -11,8 +11,7 @@ public class CharacterData
     public Vector3 position;
 
     [SerializeField]
-    private SerializableDictionary<CharacterStatName, float> baseStats = new SerializableDictionary<CharacterStatName, float>();
-
+    private Dictionary<CharacterStatName, float> baseStats = new Dictionary<CharacterStatName, float>();
     [NonSerialized]
     private Dictionary<CharacterStatName, Dictionary<object, float>> updatedStats = new Dictionary<CharacterStatName, Dictionary<object, float>>();
 
@@ -20,23 +19,25 @@ public class CharacterData
     {
         Name = name;
         Level = level;
-
         foreach (CharacterStatName stat in Enum.GetValues(typeof(CharacterStatName)))
         {
             baseStats[stat] = 0;
         }
     }
 
-    public CharacterData(int ID,string name)
+    public static CharacterData CreatPlayerData()
     {
-        this.ID = ID;   
-        this.Name = name;   
-        foreach (CharacterStatName stat in Enum.GetValues(typeof(CharacterStatName)))
-        {
-            baseStats[stat] = 0;
-        }
+        var data = new CharacterData("Player",1);
+        data.SetBaseStat(CharacterStatName.HP, 100);
+        data.SetBaseStat(CharacterStatName.MaxHP, 100);
+        data.SetBaseStat(CharacterStatName.SP, 100);
+        data.SetBaseStat(CharacterStatName.MaxSP, 100);
+        data.SetBaseStat(CharacterStatName.ATK, 20);
+        data.SetBaseStat(CharacterStatName.DEF, 20);
+        data.SetBaseStat(CharacterStatName.SPD, 20);
+        data.SetBaseStat(CharacterStatName.RollSP, 20);
+        return data;    
     }
-
     public void SetBaseStat(CharacterStatName statName, float value)
     {
         if (baseStats.ContainsKey(statName))
@@ -51,18 +52,40 @@ public class CharacterData
         if (baseStats.ContainsKey(statName))
         {
             baseStats[statName] += value;
+            if (statName == CharacterStatName.HP)
+            {
+                baseStats[statName] = Mathf.Min(baseStats[statName], GetStat(CharacterStatName.MaxHP));
+            }
+            else if (statName == CharacterStatName.SP)
+            {
+                baseStats[statName] = Mathf.Min(baseStats[statName], GetStat(CharacterStatName.MaxSP));
+            }
         }
     }
-
     public void UpdateStat(CharacterStatName statName, object source, float value)
     {
         if (!updatedStats.ContainsKey(statName))
         {
             updatedStats[statName] = new Dictionary<object, float>();
-            updatedStats[statName].Add(source, 0);
         }
+        if (!updatedStats[statName].ContainsKey(source))
+        {
+            updatedStats[statName][source] = 0;
+        }
+
         updatedStats[statName][source] += value;
+
+        if (statName == CharacterStatName.HP)
+        {
+            baseStats[statName] = Mathf.Min(baseStats[statName], GetStat(CharacterStatName.MaxHP));
+        }
+        else if (statName == CharacterStatName.SP)
+        {
+            baseStats[statName] = Mathf.Min(baseStats[statName], GetStat(CharacterStatName.MaxSP));
+        }
     }
+
+
 
     public void ChangeStat(CharacterStatName statName, object source, float value)
     {
@@ -86,24 +109,5 @@ public class CharacterData
         }
 
         return baseValue;
-    }
-    public string ToJson()
-    {
-        return JsonUtility.ToJson(new CharacterJsonData
-        {
-            Name = this.Name,
-            Level = this.Level,
-            Position = this.position,
-            BaseStats = this.baseStats
-        }, true);
-    }
-
-    [Serializable]
-    private class CharacterJsonData
-    {
-        public string Name;
-        public int Level;
-        public Vector3 Position;
-        public SerializableDictionary<CharacterStatName, float> BaseStats;
     }
 }

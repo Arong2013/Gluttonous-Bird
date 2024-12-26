@@ -4,10 +4,10 @@ public class MonsterCombatHandler : CharacterCombatHandler
 {
     MonsterMarcine monsterMarcine;
     private Rigidbody rigidbody;
-    public MonsterCombatHandler(CharacterMarcine character)
+    public MonsterCombatHandler(CharacterMarcine character, Rigidbody rigidbody)
     {
         this.monsterMarcine = character as MonsterMarcine;
-        this.rigidbody = character.GetComponent<Rigidbody>();
+        this.rigidbody = rigidbody;
     }
     public override void TakeDamage(DamgeData damgeData)
     {

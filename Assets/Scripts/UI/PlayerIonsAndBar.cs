@@ -1,13 +1,14 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class PlayerIonsAndBar : MonoBehaviour, IObserver
+public class PlayerIonsAndBar : MonoBehaviour, IObserver, IPlayerUesableUI
 {
     private PlayerMarcine player;
 
     [SerializeField] private Slider HpBar;
     [SerializeField] private Slider SpBar;
     [SerializeField] private float barUpdateSpeed = 2f;
+    [SerializeField] Button IconBtn;
 
     private float currentHp;
     private float currentSp;
@@ -19,7 +20,7 @@ public class PlayerIonsAndBar : MonoBehaviour, IObserver
         this.player = player;
         player.RegisterObserver(this);
 
-
+        IconBtn.onClick.AddListener(() => Utils.GetUI<MenuUI>().SetOpenUI());
         currentHp = player.characterData.GetStat(CharacterStatName.HP);
         currentSp = player.characterData.GetStat(CharacterStatName.SP);
 
@@ -45,13 +46,11 @@ public class PlayerIonsAndBar : MonoBehaviour, IObserver
             StopCoroutine(updateBarsCoroutine);
         }
     }
-
     private void UpdateBarsInstantly()
     {
         HpBar.value = currentHp / player.characterData.GetStat(CharacterStatName.MaxHP);
         SpBar.value = currentSp / player.characterData.GetStat(CharacterStatName.MaxSP);
     }
-
     private System.Collections.IEnumerator UpdateBarsSmoothly()
     {
         float targetHp = player.characterData.GetStat(CharacterStatName.HP);

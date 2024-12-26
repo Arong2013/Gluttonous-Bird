@@ -4,10 +4,10 @@ public class MonsterMovementHandler : CharacterMovementHandler
 {
     private MonsterMarcine character;
     private Rigidbody rigidbody;
-    public MonsterMovementHandler(CharacterMarcine character)
+    public MonsterMovementHandler(CharacterMarcine character, Rigidbody rigidbody)
     {
         this.character = character as MonsterMarcine;
-        this.rigidbody = character.GetComponent<Rigidbody>();
+        this.rigidbody = rigidbody;
     }
     public override void Move()
     {
@@ -21,15 +21,12 @@ public class MonsterMovementHandler : CharacterMovementHandler
     }
     public override void Roll()
     {
+        character.characterData.UpdateBaseStat(CharacterStatName.SP, -character.characterData.GetStat(CharacterStatName.RollSP));
         rigidbody.velocity = Vector3.zero;
         rigidbody.angularVelocity = Vector3.zero;
 
         Vector3 backwardForce = character.transform.forward * 5f;
         rigidbody.AddForce(backwardForce, ForceMode.Impulse);
-    }
-    public override void Climb()
-    {
-
     }
     public override void Jump()
     {

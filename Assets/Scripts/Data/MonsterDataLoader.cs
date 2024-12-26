@@ -91,7 +91,7 @@ public class MonsterDataLoader
         float baseDamage = reader.GetFloat(4); // BaseDamage
         float baseSPD = reader.GetFloat(5); // BaseDamage
 
-        CharacterData characterData = new CharacterData(monsterID, monsterName);
+        CharacterData characterData = new CharacterData(monsterName, monsterID);
         characterData.SetBaseStat(CharacterStatName.HP, baseHP);
         characterData.SetBaseStat(CharacterStatName.MaxHP, baseMaxHP);
         characterData.SetBaseStat(CharacterStatName.ATK, baseDamage);

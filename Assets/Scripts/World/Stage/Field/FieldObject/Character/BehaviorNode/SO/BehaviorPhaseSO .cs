@@ -40,6 +40,8 @@ public class BehaviorPhase
 
     public object GetData(string key)
     {
+        if(!parentSequence.decisionContext.ContainsKey(key))
+            return null;
         return parentSequence.decisionContext[key];
     }
     public void SetParentSequence(BehaviorSequence sequence) => parentSequence = sequence;

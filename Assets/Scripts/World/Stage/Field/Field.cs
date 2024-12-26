@@ -7,7 +7,6 @@ public class Field : MonoBehaviour
 {
     public void Awake()
     {
-        CharacterDataManager.GetSingleton();
         var itemdata =  ItemDataLoader.Instance;
         var monsterData =MonsterDataLoader.GetSingleton();
         var part = ParticleResourceData.Instance;

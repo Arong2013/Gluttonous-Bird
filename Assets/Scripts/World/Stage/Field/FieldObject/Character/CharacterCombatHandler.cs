@@ -1,5 +1,5 @@
 ﻿using System.Xml;
-public struct DamgeData
+public class DamgeData
 {
     public float Dmg;
     public int DamgeAnimeType;

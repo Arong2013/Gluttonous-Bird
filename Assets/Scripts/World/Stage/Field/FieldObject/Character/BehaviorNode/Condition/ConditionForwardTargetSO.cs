@@ -22,10 +22,10 @@ public class ConditionForwardTarget : BehaviorCondition
         RaycastHit hit;
         if (Physics.Raycast(character.transform.position, character.transform.forward, out hit, distance, character.EnemyLayer))
         {
+            Debug.Log("데이터 세팅");
             actionPhase.SetData("target", hit.transform);
             return BehaviorState.SUCCESS;
         }
-
         return BehaviorState.FAILURE;
     }
 }
